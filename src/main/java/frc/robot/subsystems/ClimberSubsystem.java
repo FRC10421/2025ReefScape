@@ -1,55 +1,76 @@
 package frc.robot.subsystems;
 
-import com.revrobotics.spark.SparkMax;
-import com.revrobotics.spark.SparkBase.PersistMode;
-import com.revrobotics.spark.SparkBase.ResetMode;
-import com.revrobotics.spark.SparkLowLevel.MotorType;
-import com.revrobotics.spark.config.SparkMaxConfig;
-import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
-
+import edu.wpi.first.wpilibj.Servo;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.Constants;
 import frc.robot.Constants.ClimberConstants;
+
+// Phoenix 6 imports
+import com.ctre.phoenix6.hardware.TalonFX;
+
+import com.ctre.phoenix6.configs.SoftwareLimitSwitchConfigs;
+import com.ctre.phoenix6.controls.PositionVoltage;
+import com.ctre.phoenix6.controls.VoltageOut;
+
+@SuppressWarnings("unused")
 
 public class ClimberSubsystem extends SubsystemBase {
 
-    private final SparkMax climbMotor;
+    // Motor & control request object
+    private final TalonFX climbMotor;
+    private final VoltageOut voltageRequest;
+    private final PositionVoltage positionRequest;
 
-    /**
-     * This subsytem that controls the climber.
-     */
-    public ClimberSubsystem () {
+    private boolean servoExtended = true;
 
-    // Set up the climb motor as a brushless motor
-    climbMotor = new SparkMax(ClimberConstants.CLIMBER_MOTOR_ID, MotorType.kBrushless);
+    public ClimberSubsystem() {
+        // Initialize motor
+        climbMotor = new TalonFX(ClimberConstants.CLIMBER_MOTOR_ID);
 
-    // Set can timeout. Because this project only sets parameters once on
-    // construction, the timeout can be long without blocking robot operation. Code
-    // which sets or gets parameters during operation may need a shorter timeout.
-    climbMotor.setCANTimeout(250);
+        // Create a Voltage control request initially set to 0 V
+        voltageRequest = new VoltageOut(0);
+        
+        positionRequest = new PositionVoltage(0).withSlot(0);
+    
+        configureClimberMotor();
 
-    // Create and apply configuration for climb motor. Voltage compensation helps
-    // the climb behave the same as the battery
-    // voltage dips. The current limit helps prevent breaker trips or burning out
-    // the motor in the event the climb stalls.
-    SparkMaxConfig climbConfig = new SparkMaxConfig();
-    climbConfig.voltageCompensation(ClimberConstants.CLIMBER_MOTOR_VOLTAGE_COMP);
-    climbConfig.smartCurrentLimit(ClimberConstants.CLIMBER_MOTOR_CURRENT_LIMIT);
-    climbConfig.idleMode(IdleMode.kBrake);
-    climbMotor.configure(climbConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
+        }
+
+        public void configureClimberMotor() {
+            
+            SoftwareLimitSwitchConfigs softLimitConfig = new SoftwareLimitSwitchConfigs();
+            softLimitConfig.ForwardSoftLimitEnable = false;
+            // softLimitConfig.ForwardSoftLimitThreshold = ClimbConstants.FORWARD_SOFT_LIMIT;
+            softLimitConfig.ReverseSoftLimitEnable = false;
+            // softLimitConfig.ReverseSoftLimitThreshold = ClimbConstants.REVERSE_SOFT_LIMIT;
+            climbMotor.getConfigurator().apply(softLimitConfig);
+        }
+
+    // Output to lift the robot up
+    public void climbUp() {
+        climbMotor.setControl(voltageRequest.withOutput(ClimberConstants.CLIMB_VOLTAGE * -1));
     }
 
+    // Output to lower the robot down
+    public void climbDown() {
+        climbMotor.setControl(voltageRequest.withOutput(ClimberConstants.CLIMB_VOLTAGE));
+    }
+
+    public void stopClimb() {
+        climbMotor.setControl(voltageRequest.withOutput(0.0));
+    }
+
+    public void holdClimb() {
+        climbMotor.setControl(voltageRequest.withOutput(0.5));
+    }
+    
     @Override
     public void periodic() {
+
+        SmartDashboard.putNumber("Climber/MotorPosition", climbMotor.getPosition().getValueAsDouble());
+        SmartDashboard.putNumber("Climber/MotorVoltage", climbMotor.getSupplyVoltage().getValueAsDouble());
+        
     }
 
-    /**
-     * Use to run the climber, can be set to run from 100% to -100%.
-     * Keep in mind that the direction changes based on which way the winch is wound.
-     * 
-     * @param speed motor speed from -1.0 to 1, with 0 stopping it
-     */
-    public void runClimber(double speed){
-        climbMotor.set(speed);
-    }
-
-}
+} // end of class
