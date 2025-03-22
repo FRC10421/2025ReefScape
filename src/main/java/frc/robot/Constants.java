@@ -4,6 +4,8 @@
 
 package frc.robot;
 
+import edu.wpi.first.units.measure.Voltage;
+
 /**
  * The Constants class provides a convenient place for teams to hold robot-wide
  * numerical or boolean
@@ -53,8 +55,9 @@ public final class Constants {
     public static final int CLIMBER_MOTOR_ID = 7;
     public static final int CLIMBER_MOTOR_CURRENT_LIMIT = 60;
     public static final double CLIMBER_MOTOR_VOLTAGE_COMP = 12;
-    public static final double CLIMBER_SPEED_DOWN = -0.5;
-    public static final double CLIMBER_SPEED_UP = 0.5;
+    public static final double CLIMBER_SPEED_DOWN = 0.2;
+    public static final double CLIMBER_SPEED_UP = -0.2;
+    public static final double CLIMB_VOLTAGE = 9.0; // TODO Adjust as needed
   }
 
   public static final class OperatorConstants {

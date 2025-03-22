@@ -12,8 +12,7 @@ import frc.robot.commands.AlgieInCommand;
 import frc.robot.commands.AlgieOutCommand;
 import frc.robot.commands.ArmDownCommand;
 import frc.robot.commands.ArmUpCommand;
-import frc.robot.commands.ClimberDownCommand;
-import frc.robot.commands.ClimberUpCommand;
+import frc.robot.commands.ClimberCommands;
 import frc.robot.commands.CoralOutCommand;
 import frc.robot.commands.CoralStackCommand;
 import frc.robot.commands.DriveCommand;
@@ -39,6 +38,7 @@ public class RobotContainer {
   // Replace with CommandPS4Controller or CommandJoystick if needed
   private final CommandXboxController m_driverController =
       new CommandXboxController(OperatorConstants.DRIVER_CONTROLLER_PORT);
+
   // You can remove this if you wish to have a single driver, note that you
   // may have to change the binding for left bumper.
   // private final CommandXboxController m_operatorController = 
@@ -51,7 +51,7 @@ public class RobotContainer {
   public final ArmSubsystem m_arm = new ArmSubsystem();
   public final DriveSubsystem m_drive = new DriveSubsystem();
   public final ClimberSubsystem m_climber = new ClimberSubsystem();
-
+  public final ClimberCommands m_climberCommands = new ClimberCommands(m_climber);
   public final SimpleCoralAuto m_simpleCoralAuto = new SimpleCoralAuto(m_drive, m_roller, m_arm);
   public final DriveForwardAuto m_driveForwardAuto = new DriveForwardAuto(m_drive);
 
@@ -90,7 +90,7 @@ public class RobotContainer {
         () -> -m_driverController.getLeftY(),
         () -> -m_driverController.getRightX(),
         () -> true));
-
+      
     /**
      * Holding the left bumper (or whatever button you assign) will multiply the speed
      * by a decimal to limit the max speed of the robot -> 
@@ -104,6 +104,7 @@ public class RobotContainer {
         () -> -m_driverController.getLeftY() * DriveConstants.SLOW_MODE_MOVE,  
         () -> -m_driverController.getRightX() * DriveConstants.SLOW_MODE_TURN,
         () -> true));
+
 
     /**
      * Here we declare all of our operator commands, these commands could have been
@@ -133,8 +134,11 @@ public class RobotContainer {
      * POV is a direction on the D-Pad or directional arrow pad of the controller,
      * the direction of this will be different depending on how your winch is wound
      */
-    m_driverController.pov(0).whileTrue(new ClimberUpCommand(m_climber));
-    m_driverController.pov(180).whileTrue(new ClimberDownCommand(m_climber));
+    
+    // Climber Commands
+    m_driverController.povUp().whileTrue(m_climberCommands.incrementUp()); // TODO Test these climber commands
+    m_driverController.povDown().whileTrue(m_climberCommands.incrementDown());
+
   }
 
   /**
